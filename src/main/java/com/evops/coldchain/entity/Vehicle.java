@@ -8,6 +8,8 @@ import com.evops.common.BaseEntity;
 public class Vehicle extends BaseEntity {
     private String plateNo;
     private String carrierName;
+    /** V8：承运商主档引用（可空；报价/锁价以承运商主档为准） */
+    private Long carrierId;
     private String driverName;
     private String driverPhone;
     private String fridgeModel;
@@ -18,6 +20,8 @@ public class Vehicle extends BaseEntity {
     public void setPlateNo(String plateNo) { this.plateNo = plateNo; }
     public String getCarrierName() { return carrierName; }
     public void setCarrierName(String carrierName) { this.carrierName = carrierName; }
+    public Long getCarrierId() { return carrierId; }
+    public void setCarrierId(Long carrierId) { this.carrierId = carrierId; }
     public String getDriverName() { return driverName; }
     public void setDriverName(String driverName) { this.driverName = driverName; }
     public String getDriverPhone() { return driverPhone; }

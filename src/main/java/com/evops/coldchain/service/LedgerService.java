@@ -79,6 +79,8 @@ public class LedgerService {
     private com.evops.coldchain.mapper.SampleTransferMapper sampleTransferMapper;
     @Resource
     private com.evops.coldchain.mapper.InspectionApprovalMapper inspectionApprovalMapper;
+    @Resource
+    private com.evops.coldchain.service.LockedPriceService lockedPriceService;
 
     public Map<String, Object> batchLedger(Long batchId) {
         TransportBatch batch = batchMapper.selectById(batchId);
@@ -238,6 +240,11 @@ public class LedgerService {
                 new QueryWrapper<com.evops.coldchain.entity.InspectionApproval>()
                         .eq("batch_id", batchId).orderByAsc("id")));
         ledger.put("inspection", inspectionInfo);
+
+        // V8 承运商报价比选与锁价：批次引用的锁价单及其原报价反查链（原单/处理人/异常原因）
+        if (batch.getLockedPriceId() != null) {
+            ledger.put("lockedPrice", lockedPriceService.trace(batch.getLockedPriceId()));
+        }
 
         ledger.put("opLogs", opLogs);
         return ledger;

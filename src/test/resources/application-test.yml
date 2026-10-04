@@ -23,3 +23,5 @@ coldchain:
     enabled: false
   exception-clock:
     enabled: false
+  quote-expire:
+    enabled: false

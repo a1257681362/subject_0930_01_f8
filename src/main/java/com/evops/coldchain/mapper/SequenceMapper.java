@@ -39,4 +39,13 @@ public interface SequenceMapper {
 
     @Select("SELECT NEXT VALUE FOR seq_cc_seal_no")
     Long nextSealNo();
+
+    @Select("SELECT NEXT VALUE FOR seq_cc_carrier_no")
+    Long nextCarrierNo();
+
+    @Select("SELECT NEXT VALUE FOR seq_cc_quote_batch_no")
+    Long nextQuoteBatchNo();
+
+    @Select("SELECT NEXT VALUE FOR seq_cc_locked_price_no")
+    Long nextLockedPriceNo();
 }

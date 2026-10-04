@@ -265,4 +265,62 @@ public final class CcConstants {
     public static final String PERM_APPROVAL_APPLY = "coldchain:approval:apply";
     /** 冷链运输审批（同意/驳回） */
     public static final String PERM_APPROVAL_REVIEW = "coldchain:approval:review";
+
+    // —— V8 冷链承运商报价比选与锁价 ——
+    // 报价批次状态：OPEN 报价中（并行收报价）/ CLOSED 已截止（已锁价或人工截止）/ EXPIRED 已过期
+    public static final String QB_OPEN = "OPEN";
+    public static final String QB_CLOSED = "CLOSED";
+    public static final String QB_EXPIRED = "EXPIRED";
+    // 报价单状态：SUBMITTED 当前有效 / SUPERSEDED 被本承运商修订版替换 /
+    // LOCKED 中选锁价 / REJECTED 落选 / EXPIRED 随批次过期失效
+    public static final String QUOTE_SUBMITTED = "SUBMITTED";
+    public static final String QUOTE_SUPERSEDED = "SUPERSEDED";
+    public static final String QUOTE_LOCKED = "LOCKED";
+    public static final String QUOTE_REJECTED = "REJECTED";
+    public static final String QUOTE_EXPIRED = "EXPIRED";
+    // 锁价单状态：LOCKED 锁价有效 / ADJUSTING 改价审批中 / VOIDED 已作废
+    public static final String LP_LOCKED = "LOCKED";
+    public static final String LP_ADJUSTING = "ADJUSTING";
+    public static final String LP_VOIDED = "VOIDED";
+    // 改价审批状态复用 APPROVAL_PENDING / APPROVAL_APPROVED / APPROVAL_REJECTED
+
+    // V8 温区代码（报价维度；REFRIGERATE 已在 V5 定义）
+    public static final String ZONE_FROZEN = "FROZEN";
+    public static final String ZONE_DEEP_FROZEN = "DEEP_FROZEN";
+    public static final String ZONE_NORMAL = "NORMAL";
+
+    // V8 操作日志实体类型
+    public static final String ENT_CARRIER = "CARRIER";
+    public static final String ENT_QUOTE_BATCH = "QUOTE_BATCH";
+    public static final String ENT_QUOTE = "QUOTE";
+    public static final String ENT_LOCKED_PRICE = "LOCKED_PRICE";
+    public static final String ENT_QUOTE_ADJUST = "QUOTE_ADJUST";
+
+    // V8 操作动作
+    public static final String ACT_CARRIER_CREATE = "CARRIER_CREATE";
+    public static final String ACT_QUOTE_BATCH_OPEN = "QUOTE_BATCH_OPEN";
+    public static final String ACT_QUOTE_BATCH_CLOSE = "QUOTE_BATCH_CLOSE";
+    public static final String ACT_QUOTE_BATCH_EXPIRE = "QUOTE_BATCH_EXPIRE";
+    public static final String ACT_QUOTE_SUBMIT = "QUOTE_SUBMIT";
+    public static final String ACT_QUOTE_LOCK = "QUOTE_LOCK";
+    public static final String ACT_LOCKED_PRICE_VOID = "LOCKED_PRICE_VOID";
+    public static final String ACT_PRICE_ADJUST_APPLY = "PRICE_ADJUST_APPLY";
+    public static final String ACT_PRICE_ADJUST_APPROVE = "PRICE_ADJUST_APPROVE";
+    public static final String ACT_PRICE_ADJUST_REJECT = "PRICE_ADJUST_REJECT";
+
+    // —— V8 Shiro 权限点 ——
+    /** 承运商主档维护 */
+    public static final String PERM_CARRIER_MANAGE = "coldchain:carrier:manage";
+    /** 发起报价批次（询价/截止/过期处理） */
+    public static final String PERM_QUOTE_BATCH_MANAGE = "coldchain:quote:batch:manage";
+    /** 承运商提交报价 */
+    public static final String PERM_QUOTE_SUBMIT = "coldchain:quote:submit";
+    /** 比选锁价（锁价单只能选一个有效方案） */
+    public static final String PERM_PRICE_LOCK = "coldchain:price:lock";
+    /** 人工改价申请（必须经审批，原始报价保留） */
+    public static final String PERM_PRICE_ADJUST_APPLY = "coldchain:price:adjust:apply";
+    /** 人工改价审批 */
+    public static final String PERM_PRICE_ADJUST_REVIEW = "coldchain:price:adjust:review";
+    /** 报价/锁价台账查看（含反查） */
+    public static final String PERM_QUOTE_VIEW = "coldchain:quote:view";
 }

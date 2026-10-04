@@ -84,6 +84,8 @@ public class TransportBatchService {
     @Resource
     private ApprovalService approvalService;
     @Resource
+    private LockedPriceService lockedPriceService;
+    @Resource
     private OpLogService opLogService;
 
     /** 派车：生成稳定批次号，固化档案快照，关联发货单与车辆 */
@@ -104,6 +106,12 @@ public class TransportBatchService {
             routeService.requireActiveRoute(req.getRouteId());
         }
 
+        // V8 冷链承运商报价比选：派车可引用锁价单。一旦携带，锁价单必须有效
+        // （未作废、无改价审批在途），批次持其ID作为“锁价单反查承运商报价”的锚点。
+        // 与 V7 运输审批同口径：未走报价比选的既有批次不受此卡口约束。
+        com.evops.coldchain.entity.LockedPrice lockedPrice = req.getLockedPriceId() == null
+                ? null : lockedPriceService.requireLockedForDispatch(req.getLockedPriceId());
+
         TransportBatch batch = new TransportBatch();
         batch.setBatchNo(generateBatchNo());
         batch.setOrderId(order.getId());
@@ -117,6 +125,8 @@ public class TransportBatchService {
         batch.setPackageSpecSnap(version.getPackageSpec());
         // 路线引用（季节版本与分段在发运时才选定并快照，故此处 version* 留空）
         batch.setRouteId(req.getRouteId());
+        // V8 锁价单引用（可空）：携带则批次与中选报价快照绑定，支持锁价单反查
+        batch.setLockedPriceId(lockedPrice == null ? null : lockedPrice.getId());
         // V7 监管区域：派车可指定，作为抽检查询区域隔离依据；不传也可首次抽检时补登
         batch.setSuperviseRegion(req.getSuperviseRegion() == null ? null
                 : (req.getSuperviseRegion().trim().isEmpty() ? null : req.getSuperviseRegion().trim()));
@@ -141,14 +151,18 @@ public class TransportBatchService {
         orderMapper.updateById(order);
 
         opLogService.log(CcConstants.ENT_BATCH, batch.getId(), batch.getId(), CcConstants.ACT_DISPATCH,
-                String.format("批次 %s 派车：发货单=%s，车辆=%s，按档案 V%d 快照（批准文号=%s，温区=%s~%s℃，包装=%s）%s%s",
+                String.format("批次 %s 派车：发货单=%s，车辆=%s，按档案 V%d 快照（批准文号=%s，温区=%s~%s℃，包装=%s）%s%s%s",
                         batch.getBatchNo(), order.getOrderNo(), vehicle.getPlateNo(),
                         version.getVersionNo(), version.getApprovalNo(),
                         version.getTempMin(), version.getTempMax(), version.getPackageSpec(),
                         req.getRouteId() == null ? ""
                                 : "；已指定运输路线，温区分段版本将在发运时按当时季节选定并逐段快照",
                         alertZoneCode == null ? ""
-                                : String.format("；温控预警模板已按药品类别创建时快照，本批次预警温区=%s", alertZoneCode)));
+                                : String.format("；温控预警模板已按药品类别创建时快照，本批次预警温区=%s", alertZoneCode),
+                        lockedPrice == null ? ""
+                                : String.format("；引用锁价单 %s（承运商=%s，含税总价=%s，可经锁价单反查原报价）",
+                                        lockedPrice.getLockedPriceNo(), lockedPrice.getCarrierNameSnap(),
+                                        lockedPrice.getFinalTotalAmount())));
         return batch;
     }
 

@@ -18,6 +18,11 @@ public class DispatchRequest {
      * 不传也可在首次对该批次立项抽检时补登，补登后不再改变。
      */
     private String superviseRegion;
+    /**
+     * V8 锁价单ID：冷链承运商报价比选完成后，派车必须引用一张有效（未作废、非改价审批中）
+     * 的锁价单；批次以此作为锁价单反查锚点。
+     */
+    private Long lockedPriceId;
 
     public Long getOrderId() { return orderId; }
     public void setOrderId(Long orderId) { this.orderId = orderId; }
@@ -27,4 +32,6 @@ public class DispatchRequest {
     public void setRouteId(Long routeId) { this.routeId = routeId; }
     public String getSuperviseRegion() { return superviseRegion; }
     public void setSuperviseRegion(String superviseRegion) { this.superviseRegion = superviseRegion; }
+    public Long getLockedPriceId() { return lockedPriceId; }
+    public void setLockedPriceId(Long lockedPriceId) { this.lockedPriceId = lockedPriceId; }
 }

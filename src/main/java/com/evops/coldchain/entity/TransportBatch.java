@@ -82,6 +82,9 @@ public class TransportBatch extends BaseEntity {
     private Long inspectionBy;
     private LocalDateTime inspectionTime;
 
+    // —— V8 承运商报价比选与锁价：派车必须引用一张有效锁价单（反查锚点）——
+    private Long lockedPriceId;
+
     public String getBatchNo() { return batchNo; }
     public void setBatchNo(String batchNo) { this.batchNo = batchNo; }
     public Long getOrderId() { return orderId; }
@@ -176,4 +179,6 @@ public class TransportBatch extends BaseEntity {
     public void setInspectionBy(Long inspectionBy) { this.inspectionBy = inspectionBy; }
     public LocalDateTime getInspectionTime() { return inspectionTime; }
     public void setInspectionTime(LocalDateTime inspectionTime) { this.inspectionTime = inspectionTime; }
+    public Long getLockedPriceId() { return lockedPriceId; }
+    public void setLockedPriceId(Long lockedPriceId) { this.lockedPriceId = lockedPriceId; }
 }
