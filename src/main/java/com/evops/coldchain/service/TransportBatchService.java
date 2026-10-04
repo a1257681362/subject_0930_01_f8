@@ -84,6 +84,8 @@ public class TransportBatchService {
     @Resource
     private ApprovalService approvalService;
     @Resource
+    private QuoteBatchService quoteBatchService;
+    @Resource
     private OpLogService opLogService;
 
     /** 派车：生成稳定批次号，固化档案快照，关联发货单与车辆 */
@@ -136,6 +138,19 @@ public class TransportBatchService {
             batchMapper.updateById(batch);
         }
 
+        // V8 锁价消费：传入锁价单则校验其处于 LOCKED（改价审批中/已作废/已被别的批次消费均拒绝），
+        // 消费后锁价单置 CONSUMED 并把中选承运商与执行价快照到批次；金额此后以锁价单快照/执行价为准。
+        if (req.getPriceLockId() != null) {
+            com.evops.coldchain.entity.PriceLock priceLock =
+                    quoteBatchService.consumeForDispatch(req.getPriceLockId(), batch.getId());
+            batch.setPriceLockId(priceLock.getId());
+            batch.setPriceLockNo(priceLock.getPriceLockNo());
+            batch.setWonQuoteId(priceLock.getWonQuoteId());
+            batch.setLockedCarrierName(priceLock.getCarrierNameSnap());
+            batch.setLockedTotalAmount(priceLock.getExecTotalAmount());
+            batchMapper.updateById(batch);
+        }
+
         // 发货单同步为已派车
         order.setStatus(CcConstants.ORDER_DISPATCHED);
         orderMapper.updateById(order);
@@ -148,7 +163,10 @@ public class TransportBatchService {
                         req.getRouteId() == null ? ""
                                 : "；已指定运输路线，温区分段版本将在发运时按当时季节选定并逐段快照",
                         alertZoneCode == null ? ""
-                                : String.format("；温控预警模板已按药品类别创建时快照，本批次预警温区=%s", alertZoneCode)));
+                                : String.format("；温控预警模板已按药品类别创建时快照，本批次预警温区=%s", alertZoneCode),
+                        req.getPriceLockId() == null ? ""
+                                : String.format("；已消费锁价单（中选承运商=%s，执行含税总价=%s），报价快照与批次脱钩",
+                                        batch.getLockedCarrierName(), batch.getLockedTotalAmount())));
         return batch;
     }
 

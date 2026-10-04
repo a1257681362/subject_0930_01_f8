@@ -620,3 +620,107 @@ curl -u inspector:inspector123 -H 'Content-Type: application/json' -X POST \
 查询跨区域隔离（EAST 账号看不到 SOUTH）；导出 CSV 电话脱敏为 `139******78` 且无导出权限
 返回 403；运输审批半成品 PENDING 拦截发运、审批期间抽检封存照常、同意后放行、驳回可重申；
 以及无抽检/审批权限账号的 403 校验。全套 33 个用例通过。
+
+## 冷链运输 V8：承运商报价比选与锁价
+
+在 V1~V7 台账上增加“按路线 × 温区 × 箱型 × 服务等级的承运商报价比选”，
+支撑冷链药品运输派车前的多方比价、锁价、人工改价审批与事后反查。
+
+### 核心规则
+
+- **四维度询价、多承运商并行报价**：`t_cc_quote_batch` 创建即固化路线（可空=门到门）、
+  温区（REFRIGERATE/FROZEN/DEEP_FROZEN/AMBIENT）、箱型、服务等级（STANDARD/EXPRESS/DEDICATED）；
+  多个承运商对同一询价批次各报各的、互不阻塞。同一承运商在一批内至多一条有效报价，
+  撤报置 WITHDRAWN 留行留痕后可报新行；中选 WON、落选 LOST。
+- **金额必须拆附加费和税率**：报价只接收基础运费、附加费明细（燃油/装卸/保险/等候…）、
+  税率；税额与含税总价由服务端 `PriceCalculator` 统一按
+  `含税总价 = 基础运费 + Σ附加费 +（基础运费 + Σ附加费）×税率` 重算，不信客户端传总价。
+- **报价过期不可被新批次引用**：每条报价带 `valid_until`，过期由定时任务（或锁价时即时判）
+  幂等推进 EXPIRED，金额行原样保留；过期报价既不能中选锁价、也不能被新运输批次引用。
+  超过截止时间且已无有效报价的询价批次置 EXPIRED（流标）。
+- **锁价单只能选一个有效方案并保存快照**：中选即把维度、承运商、基础运费/附加费合计/税率/
+  税额/含税总价逐字段快照到 `t_cc_price_lock`（orig_* 与 exec_* 两套金额列），其余有效报价落选；
+  此后报价过期、承运商再报价都与锁价单脱钩。一个锁价方案只能被一个运输批次派车消费（CONSUMED）。
+- **人工改价必须审批且保留原始报价**：改价申请落 `t_cc_price_adjustment`（PENDING），
+  锁价单进入 PRICE_PENDING 并拦截派车；QA 岗同意后只写执行价列（exec_*、price_source=ADJUSTED），
+  原始报价快照列 orig_* 原值永不动；驳回则恢复按原报价执行。改价附加费逐行留痕。
+- **报价异常只追加、可从锁价单反查**：超时未报/异常撤报/计价争议/资质不符登记到
+  `t_cc_quote_exception`，闭环只追加处理说明与处理人。从锁价单或运输批次可反查：
+  中选原报价单、报价提交人、锁价处理人、异常原因与处理人、人工改价审批链及全部操作留痕。
+
+### 接口（均在 `/api/cold-chain` 下，HTTP Basic 认证，按 Shiro 权限点分权）
+
+权限：`admin` 可建档承运商/箱型并办理全套；`dispatcher`（比选岗）发起询价/锁价/申请改价；
+`carrier`（报价方）只能提交报价/撤报；`qa` 审批人工改价并处理报价异常。
+
+| 动作 | 方法与路径 |
+| --- | --- |
+| 承运商建档 / 列表 / 撤回 | `POST /carriers` / `GET /carriers` / `POST /carriers/{id}/revoke` |
+| 箱型建档 / 列表 / 撤回 | `POST /box-types` / `GET /box-types` / `POST /box-types/{id}/revoke` |
+| 发起询价批次（四维度） | `POST /quote-batches` |
+| 承运商并行报价 / 撤报 | `POST /quote-batches/quotes` / `POST /quote-batches/quotes/{id}/withdraw` |
+| 比选视图（报价+附加费，按含税总价升序） | `GET /quote-batches/{id}/comparison` |
+| 报价详情（金额拆分） | `GET /carrier-quotes/{id}` |
+| 过期扫描（定时任务同逻辑，幂等） | `POST /quote-batches/expiry-scan` |
+| 作废询价批次（未锁价） | `POST /quote-batches/{id}/void` |
+| 锁价（唯一中选+快照）/ 作废 | `POST /price-locks` / `POST /price-locks/{id}/void` |
+| 人工改价申请 / 同意 / 驳回 | `POST /price-adjustments` / `POST /price-adjustments/{id}/approve` / `/reject` |
+| 待审批改价单 | `GET /price-adjustments/pending` |
+| 报价异常登记 / 闭环 | `POST /quote-exceptions` / `POST /quote-exceptions/{id}/resolve` |
+| 锁价单反查（原单/处理人/异常原因/改价链） | `GET /price-locks/{id}/trace` |
+| 运输批次反查锁价链 | `GET /batches/{batchId}/price-trace` |
+| 派车时消费锁价单 | `POST /batches/dispatch`（body 增加 `priceLockId`） |
+
+示例：
+
+```bash
+# 建档承运商与箱型（admin）
+curl -u admin:admin123 -H 'Content-Type: application/json' -X POST \
+  http://localhost:8080/api/cold-chain/carriers \
+  -d '{"carrierName":"华雪冷链","contactName":"王经理","qualification":"冷链运输GSP"}'
+curl -u admin:admin123 -H 'Content-Type: application/json' -X POST \
+  http://localhost:8080/api/cold-chain/box-types \
+  -d '{"boxTypeCode":"R2R8-40L","boxTypeName":"2~8℃40L冷藏箱","volumeLiter":40.00}'
+
+# 调度发起询价（路线可不传=门到门）
+curl -u dispatcher:dispatcher123 -H 'Content-Type: application/json' -X POST \
+  http://localhost:8080/api/cold-chain/quote-batches -d \
+  '{"zoneCode":"REFRIGERATE","boxTypeId":1,"serviceLevel":"STANDARD","deadline":"2026-10-10T18:00:00"}'
+
+# 承运商报价：只传基础运费+附加费+税率，税额/含税总价由服务端重算
+curl -u carrier:carrier123 -H 'Content-Type: application/json' -X POST \
+  http://localhost:8080/api/cold-chain/quote-batches/quotes -d \
+  '{"quoteBatchId":1,"carrierId":1,"baseFreight":1000.00,"taxRate":0.09,
+    "surcharges":[{"feeCode":"FUEL","feeName":"温控燃油附加","amount":60.00}],
+    "validUntil":"2026-10-20T18:00:00"}'
+
+# 锁价（唯一中选并保存报价快照）
+curl -u dispatcher:dispatcher123 -H 'Content-Type: application/json' -X POST \
+  http://localhost:8080/api/cold-chain/price-locks \
+  -d '{"quoteBatchId":1,"wonQuoteId":2}'
+
+# 人工改价申请 -> QA 审批（审批前派车被拦截；同意后执行价生效、原始报价快照保留）
+curl -u dispatcher:dispatcher123 -H 'Content-Type: application/json' -X POST \
+  http://localhost:8080/api/cold-chain/price-adjustments -d \
+  '{"priceLockId":1,"baseFreight":980.00,"taxRate":0.09,"changeReason":"长期合作协议下浮"}'
+curl -u qa:qa123 -H 'Content-Type: application/json' -X POST \
+  http://localhost:8080/api/cold-chain/price-adjustments/1/approve -d '{"reviewNote":"同意按协议价执行"}'
+
+# 派车消费锁价单
+curl -u dispatcher:dispatcher123 -H 'Content-Type: application/json' -X POST \
+  http://localhost:8080/api/cold-chain/batches/dispatch \
+  -d '{"orderId":1,"vehicleId":1,"priceLockId":1}'
+
+# 从运输批次反查原报价单、处理人及异常原因
+curl -u dispatcher:dispatcher123 http://localhost:8080/api/cold-chain/batches/1/price-trace
+```
+
+### V8 验收
+
+`CarrierQuoteComparisonIntegrationTest`（5 个用例，内存 H2 + 真实 Shiro HTTP Basic）覆盖：
+多承运商并行报价与比选视图按含税总价排序、金额三项拆分服务端重算、同承运商有效报价唯一与
+撤报留行可重报、锁价唯一中选（WON/LOST/WITHDRAWN）并保存报价快照；过期报价扫描幂等推进、
+金额保留、不能锁价/被新批次引用、批次流标；人工改价两步审批（审批中拦截派车、越权 403、
+同意后执行价生效但 orig_* 原价保留、驳回恢复原价）、一个锁价只能消费一次；从锁价单与运输批次
+反查原报价单/报价提交人/锁价人/异常原因与处理人/改价审批链；以及 carrier/dispatcher/qa 的
+分权 403。全套 38 个用例通过。

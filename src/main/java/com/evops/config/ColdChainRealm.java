@@ -45,11 +45,17 @@ public class ColdChainRealm extends AuthorizingRealm {
                 CcConstants.PERM_EXCEPTION_NOTIFY_RETRY,
                 CcConstants.PERM_BATCH_SETTLE,
                 // V7：调度发起冷链药品运输审批申请（监管岗审批同意后方可发运）
-                CcConstants.PERM_APPROVAL_APPLY)));
-        // 承运岗：温度超限/延误的处置岗位，可确认异常与提交处置结论
+                CcConstants.PERM_APPROVAL_APPLY,
+                // V8：调度比选岗发起询价/锁价/作废、申请人工改价、登记处理报价异常
+                CcConstants.PERM_QUOTE_BATCH_MANAGE,
+                CcConstants.PERM_PRICE_ADJUST_APPLY,
+                CcConstants.PERM_QUOTE_EXCEPTION_HANDLE)));
+        // 承运岗：温度超限/延误的处置岗位，可确认异常与提交处置结论；
+        // V8 同时作为承运商报价方并行报价/撤报，并可登记报价侧异常
         put("carrier", 3L, "carrier123", "CARRIER", new LinkedHashSet<>(Arrays.asList(
                 CcConstants.PERM_EXCEPTION_CONFIRM,
-                CcConstants.PERM_EXCEPTION_CONCLUDE)));
+                CcConstants.PERM_EXCEPTION_CONCLUDE,
+                CcConstants.PERM_QUOTE_SUBMIT)));
         put("receiver", 4L, "receiver123", "RECEIVER",
                 new LinkedHashSet<>(Arrays.asList(
                         CcConstants.PERM_ALERT_VIEW,
@@ -68,11 +74,21 @@ public class ColdChainRealm extends AuthorizingRealm {
                 CcConstants.PERM_EXCEPTION_CONCLUDE,
                 CcConstants.PERM_EXCEPTION_NOTIFY_RETRY,
                 CcConstants.PERM_BATCH_SETTLE,
+                // V8：承运商/箱型主档维护、询价锁价、改价申请与审批、报价异常处理全套
+                CcConstants.PERM_CARRIER_MANAGE,
+                CcConstants.PERM_QUOTE_BATCH_MANAGE,
+                CcConstants.PERM_QUOTE_SUBMIT,
+                CcConstants.PERM_PRICE_ADJUST_APPLY,
+                CcConstants.PERM_PRICE_ADJUST_REVIEW,
+                CcConstants.PERM_QUOTE_EXCEPTION_HANDLE,
                 "*")));
         // V6 质量复核岗：唯一可按分级规则复核关闭异常的角色（可查看预警与异常详情）
+        // V8 兼任人工改价审批岗（同意/驳回）与报价异常处理闭环
         put("qa", 6L, "qa123", "QA", new LinkedHashSet<>(Arrays.asList(
                 CcConstants.PERM_ALERT_VIEW,
-                CcConstants.PERM_EXCEPTION_REVIEW)));
+                CcConstants.PERM_EXCEPTION_REVIEW,
+                CcConstants.PERM_PRICE_ADJUST_REVIEW,
+                CcConstants.PERM_QUOTE_EXCEPTION_HANDLE)));
         // V7 监管岗：按批次抽检（立项/封存/双人转移/结论）+ 抽检台账导出 + 冷链运输审批；
         // 具体能访问哪些监管区域由 t_cc_inspector_region 授权（EAST/NORTH），查询再按区域隔离
         put("inspector", 7L, "inspector123", "INSPECTOR", new LinkedHashSet<>(Arrays.asList(

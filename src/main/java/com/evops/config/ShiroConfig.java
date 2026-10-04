@@ -144,6 +144,55 @@ public class ShiroConfig {
         // 审批详情/批次审批链只读：登录即可（区域隔离在服务层兜底）
         chain.addPathDefinition("/api/cold-chain/approvals/**", "authcBasic");
 
+        // —— V8 冷链承运商报价比选 ——
+        // 承运商/箱型主档维护（建档/撤回/列表同口径，统一要求主档维护权限）
+        chain.addPathDefinition("/api/cold-chain/carriers",
+                "authcBasic, perms[" + com.evops.coldchain.CcConstants.PERM_CARRIER_MANAGE + "]");
+        chain.addPathDefinition("/api/cold-chain/carriers/**",
+                "authcBasic, perms[" + com.evops.coldchain.CcConstants.PERM_CARRIER_MANAGE + "]");
+        chain.addPathDefinition("/api/cold-chain/box-types",
+                "authcBasic, perms[" + com.evops.coldchain.CcConstants.PERM_CARRIER_MANAGE + "]");
+        chain.addPathDefinition("/api/cold-chain/box-types/**",
+                "authcBasic, perms[" + com.evops.coldchain.CcConstants.PERM_CARRIER_MANAGE + "]");
+        // 承运商报价/撤报：报价方权限（具体写路径必须放在 quote-batches 宽泛只读之前）
+        chain.addPathDefinition("/api/cold-chain/quote-batches/quotes",
+                "authcBasic, perms[" + com.evops.coldchain.CcConstants.PERM_QUOTE_SUBMIT + "]");
+        chain.addPathDefinition("/api/cold-chain/quote-batches/quotes/**",
+                "authcBasic, perms[" + com.evops.coldchain.CcConstants.PERM_QUOTE_SUBMIT + "]");
+        // 过期扫描/作废询价批次：比选管理权限
+        chain.addPathDefinition("/api/cold-chain/quote-batches/expiry-scan",
+                "authcBasic, perms[" + com.evops.coldchain.CcConstants.PERM_QUOTE_BATCH_MANAGE + "]");
+        chain.addPathDefinition("/api/cold-chain/quote-batches/*/void",
+                "authcBasic, perms[" + com.evops.coldchain.CcConstants.PERM_QUOTE_BATCH_MANAGE + "]");
+        // 发起询价（POST）与列表（GET）同路径：比选管理权限
+        chain.addPathDefinition("/api/cold-chain/quote-batches",
+                "authcBasic, perms[" + com.evops.coldchain.CcConstants.PERM_QUOTE_BATCH_MANAGE + "]");
+        // 比选视图等只读：登录即可
+        chain.addPathDefinition("/api/cold-chain/quote-batches/**", "authcBasic");
+        // 锁价/作废锁价单：比选管理权限（精确路径在前）
+        chain.addPathDefinition("/api/cold-chain/price-locks/*/void",
+                "authcBasic, perms[" + com.evops.coldchain.CcConstants.PERM_QUOTE_BATCH_MANAGE + "]");
+        chain.addPathDefinition("/api/cold-chain/price-locks",
+                "authcBasic, perms[" + com.evops.coldchain.CcConstants.PERM_QUOTE_BATCH_MANAGE + "]");
+        // 人工改价：申请与审批分权
+        chain.addPathDefinition("/api/cold-chain/price-adjustments/pending",
+                "authcBasic, perms[" + com.evops.coldchain.CcConstants.PERM_PRICE_ADJUST_REVIEW + "]");
+        chain.addPathDefinition("/api/cold-chain/price-adjustments/*/approve",
+                "authcBasic, perms[" + com.evops.coldchain.CcConstants.PERM_PRICE_ADJUST_REVIEW + "]");
+        chain.addPathDefinition("/api/cold-chain/price-adjustments/*/reject",
+                "authcBasic, perms[" + com.evops.coldchain.CcConstants.PERM_PRICE_ADJUST_REVIEW + "]");
+        chain.addPathDefinition("/api/cold-chain/price-adjustments",
+                "authcBasic, perms[" + com.evops.coldchain.CcConstants.PERM_PRICE_ADJUST_APPLY + "]");
+        // 报价异常登记/闭环：异常处理权限
+        chain.addPathDefinition("/api/cold-chain/quote-exceptions/*/resolve",
+                "authcBasic, perms[" + com.evops.coldchain.CcConstants.PERM_QUOTE_EXCEPTION_HANDLE + "]");
+        chain.addPathDefinition("/api/cold-chain/quote-exceptions",
+                "authcBasic, perms[" + com.evops.coldchain.CcConstants.PERM_QUOTE_EXCEPTION_HANDLE + "]");
+        // 锁价单详情/反查/改价链只读：登录即可（具体写路径已在上方先行匹配）
+        chain.addPathDefinition("/api/cold-chain/price-locks/**", "authcBasic");
+        chain.addPathDefinition("/api/cold-chain/price-adjustments/**", "authcBasic");
+        chain.addPathDefinition("/api/cold-chain/quote-exceptions/**", "authcBasic");
+
         // 冷链台账接口与管理页面使用 HTTP Basic，便于 curl/联调；浏览器会弹出登录框
         chain.addPathDefinition("/api/**", "authcBasic");
         chain.addPathDefinition("/ui/**", "authcBasic");

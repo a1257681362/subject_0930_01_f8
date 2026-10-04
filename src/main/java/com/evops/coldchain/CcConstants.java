@@ -265,4 +265,90 @@ public final class CcConstants {
     public static final String PERM_APPROVAL_APPLY = "coldchain:approval:apply";
     /** 冷链运输审批（同意/驳回） */
     public static final String PERM_APPROVAL_REVIEW = "coldchain:approval:review";
+
+    // —— V8 承运商报价比选 ——
+    /** 承运商/箱型主档维护 */
+    public static final String PERM_CARRIER_MANAGE = "coldchain:carrier:manage";
+    /** 发起询价批次、锁价比选、作废锁价单（调度比选岗） */
+    public static final String PERM_QUOTE_BATCH_MANAGE = "coldchain:quote:batch:manage";
+    /** 承运商提交报价/撤报（报价方） */
+    public static final String PERM_QUOTE_SUBMIT = "coldchain:quote:submit";
+    /** 人工改价申请 */
+    public static final String PERM_PRICE_ADJUST_APPLY = "coldchain:price:adjust:apply";
+    /** 人工改价审批（质量/商务复核岗） */
+    public static final String PERM_PRICE_ADJUST_REVIEW = "coldchain:price:adjust:review";
+    /** 报价异常登记/处理 */
+    public static final String PERM_QUOTE_EXCEPTION_HANDLE = "coldchain:quote:exception";
+
+    // 服务等级（STANDARD 标准 / EXPRESS 加急 / DEDICATED 专车）
+    public static final String SVC_STANDARD = "STANDARD";
+    public static final String SVC_EXPRESS = "EXPRESS";
+    public static final String SVC_DEDICATED = "DEDICATED";
+
+    // 温区代码（报价维度；复用 V5 REFRIGERATE 冷藏 2~8℃，另补冷冻/深冻/常温）
+    public static final String ZONE_FROZEN = "FROZEN";
+    public static final String ZONE_DEEP_FROZEN = "DEEP_FROZEN";
+    public static final String ZONE_AMBIENT = "AMBIENT";
+
+    // 询价批次状态：OPEN 比选中 / CLOSED 已锁价结束 / EXPIRED 全部报价过期未锁 / VOIDED 作废
+    public static final String QBATCH_OPEN = "OPEN";
+    public static final String QBATCH_CLOSED = "CLOSED";
+    public static final String QBATCH_EXPIRED = "EXPIRED";
+    public static final String QBATCH_VOIDED = "VOIDED";
+
+    // 报价状态：SUBMITTED 有效中 / WITHDRAWN 撤报 / EXPIRED 过期 / WON 中选 / LOST 未中选
+    public static final String QUOTE_SUBMITTED = "SUBMITTED";
+    public static final String QUOTE_WITHDRAWN = "WITHDRAWN";
+    public static final String QUOTE_EXPIRED = "EXPIRED";
+    public static final String QUOTE_WON = "WON";
+    public static final String QUOTE_LOST = "LOST";
+
+    // 锁价单状态：LOCKED 已锁定待派车 / PRICE_PENDING 改价审批中 / CONSUMED 已派车消费 / VOIDED 作废
+    public static final String PLOCK_LOCKED = "LOCKED";
+    public static final String PLOCK_PRICE_PENDING = "PRICE_PENDING";
+    public static final String PLOCK_CONSUMED = "CONSUMED";
+    public static final String PLOCK_VOIDED = "VOIDED";
+    // 锁价价格来源：QUOTE 中选原报价 / ADJUSTED 审批改价
+    public static final String PRICE_SOURCE_QUOTE = "QUOTE";
+    public static final String PRICE_SOURCE_ADJUSTED = "ADJUSTED";
+
+    // 改价审批状态（PENDING 待审批 / APPROVED 同意执行价生效 / REJECTED 驳回回 LOCKED）
+    public static final String ADJUST_PENDING = "PENDING";
+    public static final String ADJUST_APPROVED = "APPROVED";
+    public static final String ADJUST_REJECTED = "REJECTED";
+
+    // 报价异常类型：超时未报 / 异常撤报 / 计价争议 / 资质不符 / 其他
+    public static final String QEXC_NO_RESPONSE = "NO_RESPONSE";
+    public static final String QEXC_ABNORMAL_WITHDRAW = "ABNORMAL_WITHDRAW";
+    public static final String QEXC_PRICE_DISPUTE = "PRICE_DISPUTE";
+    public static final String QEXC_QUALIFICATION = "QUALIFICATION";
+    public static final String QEXC_OTHER = "OTHER";
+
+    // V8 操作日志实体类型
+    public static final String ENT_CARRIER = "CARRIER";
+    public static final String ENT_BOX_TYPE = "BOX_TYPE";
+    public static final String ENT_QUOTE_BATCH = "QUOTE_BATCH";
+    public static final String ENT_QUOTE = "QUOTE";
+    public static final String ENT_PRICE_LOCK = "PRICE_LOCK";
+    public static final String ENT_PRICE_ADJUSTMENT = "PRICE_ADJUSTMENT";
+    public static final String ENT_QUOTE_EXCEPTION = "QUOTE_EXCEPTION";
+
+    // V8 操作动作
+    public static final String ACT_CARRIER_CREATE = "CARRIER_CREATE";
+    public static final String ACT_CARRIER_REVOKE = "CARRIER_REVOKE";
+    public static final String ACT_BOX_TYPE_CREATE = "BOX_TYPE_CREATE";
+    public static final String ACT_BOX_TYPE_REVOKE = "BOX_TYPE_REVOKE";
+    public static final String ACT_QUOTE_BATCH_CREATE = "QUOTE_BATCH_CREATE";
+    public static final String ACT_QUOTE_BATCH_VOID = "QUOTE_BATCH_VOID";
+    public static final String ACT_QUOTE_SUBMIT = "QUOTE_SUBMIT";
+    public static final String ACT_QUOTE_WITHDRAW = "QUOTE_WITHDRAW";
+    public static final String ACT_QUOTE_EXPIRE = "QUOTE_EXPIRE";
+    public static final String ACT_PRICE_LOCK = "PRICE_LOCK";
+    public static final String ACT_PRICE_LOCK_VOID = "PRICE_LOCK_VOID";
+    public static final String ACT_PRICE_LOCK_CONSUME = "PRICE_LOCK_CONSUME";
+    public static final String ACT_PRICE_ADJUST_APPLY = "PRICE_ADJUST_APPLY";
+    public static final String ACT_PRICE_ADJUST_APPROVE = "PRICE_ADJUST_APPROVE";
+    public static final String ACT_PRICE_ADJUST_REJECT = "PRICE_ADJUST_REJECT";
+    public static final String ACT_QUOTE_EXCEPTION_MARK = "QUOTE_EXCEPTION_MARK";
+    public static final String ACT_QUOTE_EXCEPTION_RESOLVE = "QUOTE_EXCEPTION_RESOLVE";
 }

@@ -82,6 +82,13 @@ public class TransportBatch extends BaseEntity {
     private Long inspectionBy;
     private LocalDateTime inspectionTime;
 
+    // —— V8 锁价引用：派车消费锁价单时回填，结算/追溯据此定位中选报价与改价链 ——
+    private Long priceLockId;
+    private String priceLockNo;
+    private Long wonQuoteId;
+    private String lockedCarrierName;
+    private java.math.BigDecimal lockedTotalAmount;
+
     public String getBatchNo() { return batchNo; }
     public void setBatchNo(String batchNo) { this.batchNo = batchNo; }
     public Long getOrderId() { return orderId; }
@@ -176,4 +183,14 @@ public class TransportBatch extends BaseEntity {
     public void setInspectionBy(Long inspectionBy) { this.inspectionBy = inspectionBy; }
     public LocalDateTime getInspectionTime() { return inspectionTime; }
     public void setInspectionTime(LocalDateTime inspectionTime) { this.inspectionTime = inspectionTime; }
+    public Long getPriceLockId() { return priceLockId; }
+    public void setPriceLockId(Long priceLockId) { this.priceLockId = priceLockId; }
+    public String getPriceLockNo() { return priceLockNo; }
+    public void setPriceLockNo(String priceLockNo) { this.priceLockNo = priceLockNo; }
+    public Long getWonQuoteId() { return wonQuoteId; }
+    public void setWonQuoteId(Long wonQuoteId) { this.wonQuoteId = wonQuoteId; }
+    public String getLockedCarrierName() { return lockedCarrierName; }
+    public void setLockedCarrierName(String lockedCarrierName) { this.lockedCarrierName = lockedCarrierName; }
+    public java.math.BigDecimal getLockedTotalAmount() { return lockedTotalAmount; }
+    public void setLockedTotalAmount(java.math.BigDecimal lockedTotalAmount) { this.lockedTotalAmount = lockedTotalAmount; }
 }
